@@ -75,7 +75,7 @@ export const streakBot = async () => {
   let msgIds = [];
 
   // Twitch Stream is Live
-  botMiddleware.onStreamOnline(channelId, async (e) => {
+  const streamonline = botMiddleware.onStreamOnline(channelId, async (e) => {
     try {
       let streamResponse;
       let { error } = await supabase.from("streams").update({ twitchStatus: true }).eq("streamer", channelSlug).select();
@@ -264,6 +264,8 @@ export const streakBot = async () => {
       console.log({ Online_Error: error, reason: error?.reason ?? "N/A" });
     }
   });
+
+  console.log(await streamonline.getCliTestCommand());
 
   // Twitch Stream is Offline
   botMiddleware.onStreamOffline(channelId, async (e) => {

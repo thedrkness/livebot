@@ -18,7 +18,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: "localhost:5000",
+    origin: ["localhost:5000", "kicktalk.app"],
   }),
 );
 
