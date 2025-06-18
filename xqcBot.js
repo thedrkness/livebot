@@ -186,7 +186,7 @@ export const xqcBot = async () => {
                   }
 
                   // Check Bots Permissions
-                  const bot = guild.members.cache.get("1219810112747868180");
+                  const bot = guild.members.cache.get("1215774457394626640");
                   if (!bot.permissionsIn(c.id).has([PermissionFlagsBits.SendMessages, PermissionFlagsBits.ViewChannel])) {
                     throw {
                       type: "botPermissionsInChannel",
@@ -356,7 +356,7 @@ export const xqcBot = async () => {
                 }
 
                 // Check if bot has permissions to send in channel
-                const bot = guild.members.cache.get("1219810112747868180");
+                const bot = guild.members.cache.get("1215774457394626640");
                 if (!bot.permissionsIn(c.id).has([PermissionFlagsBits.SendMessages, PermissionFlagsBits.ViewChannel])) {
                   throw {
                     type: "botPermissionsInChannel",
