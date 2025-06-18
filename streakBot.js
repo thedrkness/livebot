@@ -32,10 +32,7 @@ const channelUsername = "TheStreakBot";
 
 export const streakBot = async () => {
   try {
-    console.log("Starting streakBot initialization...");
-
     const supabase = createClient(supabaseUrl, supabaseKey);
-    console.log("Supabase client created");
 
     const client = new Client({
       intents: [
@@ -48,7 +45,6 @@ export const streakBot = async () => {
       ],
       partials: [Partials.Channel, Partials.Message, Partials.Reaction],
     });
-    console.log("Discord client created");
 
     new CommandKit({
       client,
@@ -57,7 +53,6 @@ export const streakBot = async () => {
       devUserIds: ["667619257168691200"],
       bulkRegister: true,
     });
-    console.log("CommandKit initialized");
 
     client.on("error", (e) => {
       console.log({ General_Error: e });
@@ -68,7 +63,7 @@ export const streakBot = async () => {
       console.log(`Guild unavailable, likely due to a server outage: ${guild}`);
     });
 
-    console.log("About to log botMiddleware and client:", { botMiddleware, client });
+    console.log(botMiddleware, client);
 
     // Handle Channel Update
     botMiddleware.onChannelUpdate(channelId, (e) => {
@@ -543,6 +538,6 @@ export const streakBot = async () => {
 
     client.login(process.env.STREAK_BOT_TOKEN);
   } catch (error) {
-    console.log("Error in streakBot function:", error);
+    console.log("Error in live function:", error);
   }
 };
