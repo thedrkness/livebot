@@ -62,6 +62,8 @@ export const streakBot = async () => {
     console.log(`Guild unavailable, likely due to a server outage: ${guild}`);
   });
 
+  console.log(botMiddleware, client);
+
   // Handle Channel Update
   botMiddleware.onChannelUpdate(channelId, (e) => {
     try {
@@ -261,7 +263,7 @@ export const streakBot = async () => {
         clearInterval(checkingForStream);
       }, 60000);
     } catch (error) {
-      console.log({ Online_Error: error, reason: error?.reason ?? "N/A" });
+      console.log({ online_error: error, reason: error?.reason ?? "N/A" });
     }
   });
 
