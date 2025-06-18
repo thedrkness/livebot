@@ -26,7 +26,7 @@ const __dirname = path.dirname(__filename);
 const supabaseUrl = process.env.DB_URL;
 const supabaseKey = process.env.DB_KEY;
 
-const channelId = "641972806";
+const channelId = "71092938";
 const channelSlug = "xqc";
 const channelUsername = "xQc";
 
