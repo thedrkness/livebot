@@ -63,8 +63,6 @@ export const streakBot = async () => {
       console.log(`Guild unavailable, likely due to a server outage: ${guild}`);
     });
 
-    console.log(botMiddleware, client);
-
     // Handle Channel Update
     botMiddleware.onChannelUpdate(channelId, (e) => {
       try {
@@ -442,38 +440,39 @@ export const streakBot = async () => {
                 const rowLight = new ActionRowBuilder().addComponents([offlineButtonLight]);
 
                 // Send Offline Message
-                const { channel_id, message } = msgIds.filter((m) => m.channel_id === c.id);
+                console.log(msgIds);
+                const msg = msgIds.filter((m) => m.channel_id === c.id)[0]; // Get the first matching message
 
                 let seconds;
-                if (message !== undefined) {
+                if (msg && msg.message) {
                   const dateNow = Math.floor(new Date().getTime() / 1000);
-                  seconds = Math.floor(dateNow - new Date(message.createdTimestamp) / 1000);
+                  seconds = Math.floor(dateNow - new Date(msg.message.createdTimestamp) / 1000);
                 }
 
-                if (seconds > 90 || message === undefined) {
+                if (seconds > 90 || !msg || !msg.message) {
                   if (status) {
-                    if (message === undefined) {
+                    if (!msg || !msg.message) {
                       await channel.send({
                         content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
                         embeds: [offlineMessage],
                         components: [row],
                       });
                     } else {
-                      await message.edit({
+                      await msg.message.edit({
                         content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
                         embeds: [offlineMessage],
                         components: [row],
                       });
                     }
                   } else {
-                    if (message === undefined) {
+                    if (!msg || !msg.message) {
                       await channel.send({
                         content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
                         embeds: [offlineMessageLight],
                         components: [rowLight],
                       });
                     } else {
-                      await message.edit({
+                      await msg.message.edit({
                         content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
                         embeds: [offlineMessageLight],
                         components: [rowLight],

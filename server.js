@@ -15,6 +15,7 @@ const app = express();
 // Rate limiters
 botMiddleware.apply(app);
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
@@ -22,8 +23,14 @@ app.use(
   }),
 );
 
-app.listen(5000, async () => {
-  console.log("Listening on port 5000");
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, async () => {
+  console.log(`Listening on port ${PORT}`);
   try {
     await botMiddleware.markAsReady();
 
