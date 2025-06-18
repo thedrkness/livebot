@@ -26,9 +26,10 @@ const __dirname = path.dirname(__filename);
 const supabaseUrl = process.env.DB_URL;
 const supabaseKey = process.env.DB_KEY;
 
-const channelId = "71092938";
-const channelSlug = "xqc";
-const channelUsername = "xQc";
+// const channelId = "71092938";
+const channelId = "909497787";
+const channelSlug = "zdini";
+const channelUsername = "zDini";
 
 export const xqcBot = async () => {
   try {
