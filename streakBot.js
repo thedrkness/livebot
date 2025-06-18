@@ -79,6 +79,8 @@ export const streakBot = async () => {
     const streamonline = botMiddleware.onStreamOnline(channelId, async (e) => {
       try {
         let streamResponse;
+        msgIds = [];
+
         let { error } = await supabase.from("streams").update({ twitchStatus: true }).eq("streamer", channelSlug).select();
         if (error) {
           console.log(error);
@@ -463,6 +465,9 @@ export const streakBot = async () => {
                         embeds: [offlineMessage],
                         components: [row],
                       });
+
+                      // Remove msg from array after sending msg
+                      msgIds = msgIds.filter((m) => m.channel_id !== c.id);
                     }
                   } else {
                     if (!msg || !msg.message) {
@@ -477,6 +482,9 @@ export const streakBot = async () => {
                         embeds: [offlineMessageLight],
                         components: [rowLight],
                       });
+
+                      // Remove msg from array after sending msg
+                      msgIds = msgIds.filter((m) => m.channel_id !== c.id);
                     }
                   }
                 }
