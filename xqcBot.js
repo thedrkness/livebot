@@ -26,10 +26,9 @@ const __dirname = path.dirname(__filename);
 const supabaseUrl = process.env.DB_URL;
 const supabaseKey = process.env.DB_KEY;
 
-// const channelId = "71092938";
-const channelId = "909497787";
-const channelSlug = "zdini";
-const channelUsername = "zDini";
+const channelId = "71092938";
+const channelSlug = "xqc";
+const channelUsername = "xQc";
 
 export const xqcBot = async () => {
   try {
@@ -453,12 +452,24 @@ export const xqcBot = async () => {
                         components: [row],
                       });
                     } else {
-                      await msg.message.edit({
-                        content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
-                        embeds: [offlineMessage],
-                        components: [row],
-                      });
-
+                      try {
+                        await msg.message.edit({
+                          content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
+                          embeds: [offlineMessage],
+                          components: [row],
+                        });
+                      } catch (error) {
+                        if (error.code === 10008) {
+                          // Message not found send new one
+                          await channel.send({
+                            content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
+                            embeds: [offlineMessage],
+                            components: [row],
+                          });
+                        } else {
+                          console.log(`Error editing message in channel ${c.id}:`, error);
+                        }
+                      }
                       // Remove msg from array after sending msg
                       msgIds = msgIds.filter((m) => m.channel_id !== c.id);
                     }
@@ -470,12 +481,24 @@ export const xqcBot = async () => {
                         components: [rowLight],
                       });
                     } else {
-                      await msg.message.edit({
-                        content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
-                        embeds: [offlineMessageLight],
-                        components: [rowLight],
-                      });
-
+                      try {
+                        await msg.message.edit({
+                          content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
+                          embeds: [offlineMessageLight],
+                          components: [rowLight],
+                        });
+                      } catch (error) {
+                        if (error.code === 10008) {
+                          // Message not found send new one
+                          await channel.send({
+                            content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
+                            embeds: [offlineMessageLight],
+                            components: [rowLight],
+                          });
+                        } else {
+                          console.log(`Error editing message in channel ${c.id}:`, error);
+                        }
+                      }
                       // Remove msg from array after sending msg
                       msgIds = msgIds.filter((m) => m.channel_id !== c.id);
                     }
