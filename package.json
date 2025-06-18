@@ -1,0 +1,25 @@
+{
+  "name": "ocrbot",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.50.0",
+    "@twurple/api": "^7.3.0",
+    "@twurple/auth": "^7.3.0",
+    "@twurple/chat": "^7.3.0",
+    "@twurple/eventsub-http": "^7.3.0",
+    "commandkit": "^0.1.10",
+    "cors": "^2.8.5",
+    "discord.js": "^14.20.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  }
+}
