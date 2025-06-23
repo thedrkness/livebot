@@ -29,6 +29,7 @@ const supabaseKey = process.env.DB_KEY;
 const channelId = "191965237";
 const channelSlug = "thestreakbot";
 const channelUsername = "TheStreakBot";
+const botId = "1219810112747868180";
 
 export const streakBot = async () => {
   try {
@@ -64,8 +65,123 @@ export const streakBot = async () => {
     });
 
     // Handle Channel Update
-    botMiddleware.onChannelUpdate(channelId, (e) => {
+    botMiddleware.onChannelUpdate(channelId, async (e) => {
       try {
+        // Get current stream info to check if title changed
+        const currentTitle = e?.streamTitle || null;
+
+        if (currentTitle) {
+          // Get previous title from database
+          let { data: streamData, error: titleFetchError } = await supabase
+            .from("streams")
+            .select("title")
+            .eq("streamer", channelSlug)
+            .select();
+
+          if (titleFetchError) {
+            console.log("Error fetching previous title:", titleFetchError);
+            return;
+          }
+
+          const previousTitle = streamData[0]?.title;
+
+          if (previousTitle && currentTitle !== previousTitle) {
+            console.log(`Title changed from "${previousTitle}" to "${currentTitle}"`);
+
+            // Update the previous title in database
+            let { data: updateData, error: updateError } = await supabase
+              .from("streams")
+              .update({ title: currentTitle })
+              .eq("streamer", channelSlug)
+              .select();
+
+            if (updateError) {
+              console.log("Error updating previous title:", updateError);
+            }
+
+            client.guilds.cache.forEach(async (guild) => {
+              try {
+                // Send Message to non alert channels
+                let { data, error } = await supabase
+                  .from("streak_bot")
+                  .select()
+                  .eq("guild_id", guild.id)
+                  .not("role_id", "is", null);
+
+                if (error) {
+                  throw { type: "database", code: error.code, message: error.message, details: error.details, hint: error.hint };
+                }
+
+                if (data.length === 0 || data[0]?.channel_ids?.length === 0) {
+                  console.log("Alert cant be sent, there are no channels: " + guild?.id || "N/A");
+                  return;
+                }
+
+                const filteredChannels = await data[0]?.channel_ids?.filter((c) => c.should_alert === false);
+
+                // Check Channel Validity
+                const checkChannel = async (dbChannelId) => {
+                  const isChannelAvailable = guild.channels.cache.has(dbChannelId);
+                  if (dbChannelId === null || !isChannelAvailable) {
+                    return ["__**Not Set**__", false];
+                  } else {
+                    return [`<#${dbChannelId}>`, true];
+                  }
+                };
+
+                filteredChannels.forEach(async (c) => {
+                  // If no role or channel return
+                  if ((await checkChannel(c.id)[1]) === false) {
+                    const errResponse = {
+                      type: "roleOrChannelMissingInDisc",
+                      role: `${data[0].role_id}`,
+                      channel: `${c.id}`,
+                      message: "Discord no longer has channel or role available, set or create.",
+                    };
+
+                    console.log("Error finding valid channel: ", errResponse);
+
+                    return errResponse;
+                  }
+
+                  // Check Bots Permissions
+                  const bot = guild.members.cache.get(botId);
+                  if (!bot.permissionsIn(c.id).has([PermissionFlagsBits.SendMessages, PermissionFlagsBits.ViewChannel])) {
+                    throw {
+                      type: "botPermissionsInChannel",
+                      channel: `${c.id}`,
+                      message: "Bot missing permissions Send and View in discord",
+                    };
+                  }
+
+                  // Send Message in Channel
+                  const channel = guild.channels.cache.get(c.id);
+                  const channelUpdateMessage = new EmbedBuilder()
+                    .setTitle(`${channelUsername} Title Updated`)
+                    .addFields({ name: "✧ New Title:", value: `[${currentTitle}](https://twitch.tv/${channelSlug})` })
+                    .setColor("#2f2d42")
+                    .setFooter({ text: "Made by Dark", iconURL: "https://i.imgur.com/lYCeMCo.jpeg" })
+                    .setTimestamp();
+
+                  const onlineButton = new ButtonBuilder()
+                    .setLabel("Go to Channel")
+                    .setURL(`https://twitch.tv/${channelSlug}`)
+                    .setStyle(ButtonStyle.Link);
+
+                  const row = new ActionRowBuilder().addComponents([onlineButton]);
+                  await channel.send({
+                    embeds: [channelUpdateMessage],
+                    components: [row],
+                  });
+                });
+              } catch (err) {
+                console.log(err);
+              }
+            });
+          }
+        }
+
+        // Update activity with category regardless of title change
         client.user.setActivity({ name: e.categoryName, type: ActivityType.Streaming });
       } catch (error) {
         console.log("Error on Channel Update Subscription: ", error);
@@ -107,6 +223,16 @@ export const streakBot = async () => {
                 "https://static-cdn.jtvnw.net/user-default-pictures-uv/ebe4cd89-b4f4-4cd9-adac-2f30151b4209-profile_image-70x70.png",
               username: broadcaster?.displayName || channelSlug,
             };
+
+            // Update previous stream title in database when stream goes live
+            let { error: titleUpdateError } = await supabase
+              .from("streams")
+              .update({ title: streamResponse.title })
+              .eq("streamer", channelSlug);
+
+            if (titleUpdateError) {
+              console.log("Error updating previous title:", titleUpdateError);
+            }
 
             let { data: initialData, error: initialError } = await supabase
               .from("streams")
@@ -189,7 +315,7 @@ export const streakBot = async () => {
                   }
 
                   // Check Bots Permissions
-                  const bot = guild.members.cache.get("1219810112747868180");
+                  const bot = guild.members.cache.get(botId);
                   if (!bot.permissionsIn(c.id).has([PermissionFlagsBits.SendMessages, PermissionFlagsBits.ViewChannel])) {
                     throw {
                       type: "botPermissionsInChannel",
@@ -267,8 +393,6 @@ export const streakBot = async () => {
         console.log({ online_error: error, reason: error?.reason ?? "N/A" });
       }
     });
-
-    console.log(await streamonline.getCliTestCommand());
 
     // Twitch Stream is Offline
     botMiddleware.onStreamOffline(channelId, async (e) => {
@@ -363,7 +487,7 @@ export const streakBot = async () => {
                 }
 
                 // Check if bot has permissions to send in channel
-                const bot = guild.members.cache.get("1219810112747868180");
+                const bot = guild.members.cache.get(botId);
                 if (!bot.permissionsIn(c.id).has([PermissionFlagsBits.SendMessages, PermissionFlagsBits.ViewChannel])) {
                   throw {
                     type: "botPermissionsInChannel",
@@ -460,12 +584,24 @@ export const streakBot = async () => {
                         components: [row],
                       });
                     } else {
-                      await msg.message.edit({
-                        content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
-                        embeds: [offlineMessage],
-                        components: [row],
-                      });
-
+                      try {
+                        await msg.message.edit({
+                          content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
+                          embeds: [offlineMessage],
+                          components: [row],
+                        });
+                      } catch (error) {
+                        if (error.code === 10008) {
+                          // Message not found send new one
+                          await channel.send({
+                            content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
+                            embeds: [offlineMessage],
+                            components: [row],
+                          });
+                        } else {
+                          console.log(`Error editing message in channel ${c.id}:`, error);
+                        }
+                      }
                       // Remove msg from array after sending msg
                       msgIds = msgIds.filter((m) => m.channel_id !== c.id);
                     }
@@ -477,12 +613,24 @@ export const streakBot = async () => {
                         components: [rowLight],
                       });
                     } else {
-                      await msg.message.edit({
-                        content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
-                        embeds: [offlineMessageLight],
-                        components: [rowLight],
-                      });
-
+                      try {
+                        await msg.message.edit({
+                          content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
+                          embeds: [offlineMessageLight],
+                          components: [rowLight],
+                        });
+                      } catch (error) {
+                        if (error.code === 10008) {
+                          // Message not found send new one
+                          await channel.send({
+                            content: `**${channelUsername} is now offline** <a:heSleep:1384759674133418075>`,
+                            embeds: [offlineMessageLight],
+                            components: [rowLight],
+                          });
+                        } else {
+                          console.log(`Error editing message in channel ${c.id}:`, error);
+                        }
+                      }
                       // Remove msg from array after sending msg
                       msgIds = msgIds.filter((m) => m.channel_id !== c.id);
                     }
